@@ -3,13 +3,28 @@ import TextInputGroup from "../layout/TextInputGroup";
 import { Consumer } from "../../context";
 import axios from "axios";
 
-class AddContact extends Component {
+class EditContact extends Component {
   state = {
     name: "",
     email: "",
     phone: "",
     errors: { name: "", email: "", phone: "" }
   };
+
+  async componentDidMount() {
+    const { id } = this.props.match.params;
+    const res = await axios.get(
+      `https://jsonplaceholder.typicode.com/users/${id}`
+    );
+
+    const contact = res.data;
+
+    this.setState({
+      name: contact.name,
+      email: contact.email,
+      phone: contact.phone
+    });
+  }
 
   onSubmit = async (dispatch, e) => {
     e.preventDefault();
@@ -30,20 +45,20 @@ class AddContact extends Component {
       return;
     }
 
-    const newContact = {
+    const updContact = {
       name,
       email,
       phone
     };
 
-    // sends newContact as payload to the context file to create a new contact and add into the context state (similiar to Redux and accessible anywhere in React)
-    const res = await axios.post(
-      "https://jsonplaceholder.typicode.com/users",
-      newContact
-    );
-    // .then(res => dispatch({ type: "ADD_CONTACT", payload: res.data }));
+    const { id } = this.props.match.params;
 
-    dispatch({ type: "ADD_CONTACT", payload: res.data });
+    const res = await axios.put(
+      `https://jsonplaceholder.typicode.com/users/${id}`,
+      updContact
+    );
+
+    dispatch({ type: "UPDATE_CONTACT", payload: res.data });
 
     // Clear out state for the form so it goes blank after submit.
     this.setState({
@@ -53,6 +68,7 @@ class AddContact extends Component {
       errors: {}
     });
 
+    // Redirect back to main page with contact list
     this.props.history.push("/");
   };
 
@@ -69,7 +85,7 @@ class AddContact extends Component {
           const { dispatch } = value;
           return (
             <div className='card mb-3'>
-              <div className='card-header'>Add Contact</div>
+              <div className='card-header'>Edit Contact</div>
               <div className='card-body'>
                 <form onSubmit={this.onSubmit.bind(this, dispatch)}>
                   <TextInputGroup
@@ -99,7 +115,7 @@ class AddContact extends Component {
                   />
                   <input
                     type='submit'
-                    value='Add Contact'
+                    value='Update Contact'
                     className='btn btn-block btn-light'
                   />
                 </form>
@@ -112,4 +128,4 @@ class AddContact extends Component {
   }
 }
 
-export default AddContact;
+export default EditContact;
